@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ExpensesPage() {
   const [amount, setAmount] = useState("");
@@ -8,6 +8,17 @@ export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<
     { amount: string; category: string }[]
   >([]);
+  useEffect(() => {
+  const savedExpenses = localStorage.getItem("expenses");
+
+  if (savedExpenses) {
+    setExpenses(JSON.parse(savedExpenses));
+  }
+}, []);
+
+useEffect(() => {
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+}, [expenses]);
 
   function addExpense() {
     if (!amount || !category) return;
@@ -23,7 +34,13 @@ export default function ExpensesPage() {
     setAmount("");
     setCategory("");
   }
+function deleteExpense(index: number) {
+  const updatedExpenses = expenses.filter(
+    (_, i) => i !== index
+  );
 
+  setExpenses(updatedExpenses);
+}
   return (
     <main className="min-h-screen bg-slate-950 text-white p-8">
       <h1 className="text-4xl font-bold mb-8">
@@ -62,12 +79,21 @@ export default function ExpensesPage() {
 
       <div className="mt-10 space-y-3">
         {expenses.map((expense, index) => (
-          <div
-            key={index}
-            className="bg-slate-900 p-4 rounded-xl"
-          >
-            ₹{expense.amount} • {expense.category}
-          </div>
+         <div
+  key={index}
+  className="bg-slate-900 p-4 rounded-xl flex justify-between"
+>
+  <span>
+    ₹{expense.amount} • {expense.category}
+  </span>
+
+  <button
+    onClick={() => deleteExpense(index)}
+    className="text-red-400"
+  >
+    ❌
+  </button>
+</div>
         ))}
       </div>
     </main>

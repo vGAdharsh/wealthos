@@ -1,4 +1,25 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
 export default function Dashboard() {
+  const [expenses, setExpenses] = useState<
+  {
+    amount: string;
+    category: string;
+  }[]
+>([]);
+useEffect(() => {
+  const savedExpenses = localStorage.getItem("expenses");
+
+  if (savedExpenses) {
+    setExpenses(JSON.parse(savedExpenses));
+  }
+}, []);
+const totalExpenses = expenses.reduce(
+  (sum, expense) => sum + Number(expense.amount),
+  0
+);
   return (
     <main className="min-h-screen bg-slate-950 text-white p-8">
 
@@ -11,7 +32,7 @@ export default function Dashboard() {
         <div className="bg-slate-900 p-6 rounded-2xl">
           <h2>Total Balance</h2>
           <p className="text-3xl text-green-400 font-bold">
-            ₹0
+            ₹{totalExpenses}
           </p>
         </div>
 
@@ -25,7 +46,7 @@ export default function Dashboard() {
         <div className="bg-slate-900 p-6 rounded-2xl">
           <h2>Expenses</h2>
           <p className="text-3xl text-red-400 font-bold">
-            ₹0
+            ₹{totalExpenses}
           </p>
         </div>
 
