@@ -16,6 +16,25 @@ useEffect(() => {
     setExpenses(JSON.parse(savedExpenses));
   }
 }, []);
+const [income, setIncome] = useState<
+  {
+    amount: string;
+    source: string;
+  }[]
+>([]);
+
+useEffect(() => {
+  const savedIncome = localStorage.getItem("income");
+
+  if (savedIncome) {
+    setIncome(JSON.parse(savedIncome));
+  }
+}, []);
+
+const totalIncome = income.reduce(
+  (sum, item) => sum + Number(item.amount),
+  0
+);
 const totalExpenses = expenses.reduce(
   (sum, expense) => sum + Number(expense.amount),
   0
@@ -32,14 +51,14 @@ const totalExpenses = expenses.reduce(
         <div className="bg-slate-900 p-6 rounded-2xl">
           <h2>Total Balance</h2>
           <p className="text-3xl text-green-400 font-bold">
-            ₹{totalExpenses}
+            ₹{totalIncome - totalExpenses}
           </p>
         </div>
 
         <div className="bg-slate-900 p-6 rounded-2xl">
           <h2>Income</h2>
           <p className="text-3xl text-blue-400 font-bold">
-            ₹0
+            ₹{totalIncome}
           </p>
         </div>
 
