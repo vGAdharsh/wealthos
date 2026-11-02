@@ -5,6 +5,7 @@
  */
 
 import type { Paise } from "./money";
+import type { NwClassification } from "./wealth-types";
 
 export type TxType =
   | "income"
@@ -43,6 +44,9 @@ export type Transaction = {
   isRecurring: boolean;
   contentHash: string;
   importBatchId: string | null;
+  nwClassification?: NwClassification | null;
+  nwIsOverride?: boolean;
+  nwReasoning?: string | null;
   createdAt: string;
 };
 

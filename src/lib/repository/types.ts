@@ -14,9 +14,11 @@ import type {
   TransactionInput,
   TxFilter,
 } from "@/lib/types";
+import type { WealthProvider } from "./wealth";
 
 export interface DataProvider {
   readonly mode: "local" | "database";
+  readonly wealth: WealthProvider;
 
   listTransactions(filter?: TxFilter): Promise<Transaction[]>;
   createTransaction(input: TransactionInput): Promise<Transaction>;

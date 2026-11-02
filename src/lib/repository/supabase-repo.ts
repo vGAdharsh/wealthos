@@ -8,6 +8,7 @@
 import { toPaise } from "@/lib/money";
 import { createClient } from "@/lib/supabase/client";
 import { paiseToStoredString } from "./local-repo";
+import { SupabaseWealth } from "./wealth-supabase";
 import type { DataProvider } from "./types";
 import type {
   Budget,
@@ -72,18 +73,22 @@ function dbToTx(row: DbTx): Transaction {
     isRecurring: row.is_recurring,
     contentHash: row.content_hash,
     importBatchId: row.import_batch_id,
+    nwClassification: row.nw_classification,
+    nwIsOverride: row.nw_is_override,
+    nwReasoning: row.nw_reasoning,
     createdAt: row.created_at,
   };
 }
 
 export class SupabaseProvider implements DataProvider {
   readonly mode = "database" as const;
+  readonly wealth = new SupabaseWealth();
 
   async listTransactions(filter?: TxFilter): Promise<Transaction[]> {
     let q = createClient()
       .from("transactions")
       .select(
-        "id, user_id, type, tx_date, amount::text, description, source, category_id, payment_method, notes, is_recurring, content_hash, import_batch_id, created_at, expense_categories(name)",
+        "id, user_id, type, tx_date, amount::text, description, source, category_id, payment_method, notes, is_recurring, content_hash, import_batch_id, nw_classification, nw_is_override, nw_reasoning, created_at, expense_categories(name)",
       )
       .order("tx_date", { ascending: false })
       .order("created_at", { ascending: false });
@@ -111,6 +116,9 @@ export class SupabaseProvider implements DataProvider {
       is_recurring: input.isRecurring,
       content_hash: input.contentHash,
       import_batch_id: input.importBatchId ?? null,
+      nw_classification: input.nwClassification ?? null,
+      nw_is_override: input.nwIsOverride ?? false,
+      nw_reasoning: input.nwReasoning ?? null,
     };
   }
 
@@ -124,7 +132,7 @@ export class SupabaseProvider implements DataProvider {
       .from("transactions")
       .insert(SupabaseProvider.toDb(input, user.id))
       .select(
-        "id, user_id, type, tx_date, amount::text, description, source, category_id, payment_method, notes, is_recurring, content_hash, import_batch_id, created_at, expense_categories(name)",
+        "id, user_id, type, tx_date, amount::text, description, source, category_id, payment_method, notes, is_recurring, content_hash, import_batch_id, nw_classification, nw_is_override, nw_reasoning, created_at, expense_categories(name)",
       )
       .single();
     if (error) throw new Error(`Could not save transaction: ${error.message}`);
@@ -149,6 +157,9 @@ export class SupabaseProvider implements DataProvider {
     if (patch.notes !== undefined) update.notes = patch.notes;
     if (patch.isRecurring !== undefined) update.is_recurring = patch.isRecurring;
     if (patch.contentHash !== undefined) update.content_hash = patch.contentHash;
+    if (patch.nwClassification !== undefined) update.nw_classification = patch.nwClassification;
+    if (patch.nwIsOverride !== undefined) update.nw_is_override = patch.nwIsOverride;
+    if (patch.nwReasoning !== undefined) update.nw_reasoning = patch.nwReasoning;
     const { error } = await supabase
       .from("transactions")
       .update(update)

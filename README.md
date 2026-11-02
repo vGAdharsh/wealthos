@@ -46,7 +46,19 @@ Migrations live in `supabase/migrations/` (versioned SQL, Row Level Security on 
 
 ## Roadmap
 
-Phase 1 foundation (this branch) → Phase 2 financial engine → Phase 3 wealth → Phase 4 analytics → Phase 5 AI → Phase 6 knowledge centre → Phase 7 production. See `docs/` for the product narrative.
+## Status
+
+| Phase | Scope | State |
+|---|---|---|
+| 1 | Foundation — design system, auth, DB + RLS, money math, CI | ✅ Done (RLS verified against real Postgres) |
+| 2 | Financial engine — unified ledger, budgets, savings, CSV | ✅ Done |
+| 3 | Wealth — investments (XIRR), assets, liabilities, net worth, goals, calendar | ✅ Done |
+| 4 | Analytics — reports, needs/wants engine, forecasts with disclosed methods | ✅ Done |
+| 5 | AI — read-only tools, assistant, monthly review | ✅ Done (needs `AI_API_KEY`) |
+| 6 | Knowledge centre (RAG) | Planned — deliberately last (spec Part 7) |
+| 7 | Production | Deployment-ready — see `DEPLOYMENT.md` |
+
+See `docs/` for the product narrative.
 
 ## Security notes
 

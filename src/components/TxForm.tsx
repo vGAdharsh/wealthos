@@ -11,6 +11,9 @@ import type {
   TxType,
 } from "@/lib/types";
 import { Button, Input, Label, Select } from "./ui";
+import { classifyNeedsWants } from "@/lib/domain/classify";
+import type { NwClassification } from "@/lib/wealth-types";
+import { NW_LABELS } from "@/lib/wealth-types";
 
 const TYPE_OPTIONS: { value: TxType; label: string }[] = [
   { value: "expense", label: "Expense" },
@@ -51,6 +54,7 @@ export function TxForm({
   const [busy, setBusy] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
+  const [nwChoice, setNwChoice] = useState<"auto" | NwClassification>("auto");
 
   const needsCategory = type !== "income" && type !== "transfer";
 
@@ -69,6 +73,16 @@ export function TxForm({
     if (needsCategory && !categoryId) return setError("Choose a category");
     setBusy(true);
     try {
+      const suggested =
+        type === "expense"
+          ? classifyNeedsWants({
+              categoryName: categories.find((c) => c.id === categoryId)?.name ?? null,
+              amountPaise: paise,
+              description: description.trim(),
+              source: source.trim(),
+              isRecurring,
+            })
+          : null;
       const input: TransactionInput = {
         type,
         date,
@@ -80,6 +94,9 @@ export function TxForm({
         notes: notes || null,
         isRecurring,
         contentHash: contentHash(type, date, paise, description.trim(), source.trim()),
+        nwClassification: nwChoice === "auto" ? (suggested?.classification ?? null) : nwChoice,
+        nwIsOverride: nwChoice !== "auto",
+        nwReasoning: suggested?.reasoning ?? null,
       };
       if (editing) await repo.updateTransaction(editing.id, input);
       else await repo.createTransaction(input);
@@ -179,6 +196,27 @@ export function TxForm({
         <input type="checkbox" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} className="h-4 w-4" />
         Recurring (monthly)
       </label>
+      {type === "expense" && (
+        <div>
+          <Label htmlFor="tx-nw">Needs / Wants</Label>
+          <Select id="tx-nw" value={nwChoice} onChange={(e) => setNwChoice(e.target.value as "auto" | NwClassification)}>
+            <option value="auto">Let WealthOS suggest</option>
+            {(Object.entries(NW_LABELS) as [NwClassification, string][]).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </Select>
+          {(() => {
+            const suggested = classifyNeedsWants({
+              categoryName: categories.find((c) => c.id === categoryId)?.name ?? null,
+              amountPaise: toPaise(amount),
+              description: description.trim(),
+              source: source.trim(),
+              isRecurring,
+            });
+            return <p className="mt-1.5 text-xs text-muted">{suggested.classification === "uncertain" && nwChoice === "auto" ? "Suggestion: needs your review — " : "Suggestion: "}{NW_LABELS[suggested.classification]} · {suggested.reasoning} You can override this anytime.</p>;
+          })()}
+        </div>
+      )}
       {error && <p className="text-sm text-danger">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" disabled={busy}>

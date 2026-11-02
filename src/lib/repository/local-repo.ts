@@ -7,6 +7,7 @@
 import { toPaise } from "@/lib/money";
 import { contentHash } from "./hash";
 import type { DataProvider } from "./types";
+import { LocalWealth } from "./wealth-local";
 import type {
   Budget,
   BudgetInput,
@@ -75,6 +76,7 @@ function storedToTx(row: StoredTx): Transaction {
 
 export class LocalProvider implements DataProvider {
   readonly mode = "local" as const;
+  readonly wealth = new LocalWealth();
 
   async listTransactions(filter?: TxFilter): Promise<Transaction[]> {
     const rows = read<StoredTx>(TX_KEY).map(storedToTx);

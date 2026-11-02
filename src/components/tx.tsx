@@ -1,4 +1,5 @@
 import type { Transaction, TxType } from "@/lib/types";
+import type { NwClassification } from "@/lib/wealth-types";
 import { formatINR } from "@/lib/money";
 
 export const TYPE_LABELS: Record<TxType, string> = {
@@ -17,3 +18,10 @@ export function txDisplay(t: Transaction): { text: string; tone: string } {
     return { text: formatINR(t.amountPaise), tone: "text-muted" };
   return { text: `−${formatINR(t.amountPaise)}`, tone: "text-danger" };
 }
+
+export const NW_TONE: Record<NwClassification, "accent" | "warning" | "info" | "neutral"> = {
+  essential_need: "accent",
+  discretionary_want: "warning",
+  mixed: "info",
+  uncertain: "neutral",
+};
