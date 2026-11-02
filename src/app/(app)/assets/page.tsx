@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect -- async data loading through the repository */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { formatINR, toPaise, type Paise } from "@/lib/money";
+import { formatINR, toPaise } from "@/lib/money";
 import { allocationBps } from "@/lib/domain/wealth";
 import { useRepository } from "@/lib/repository/provider";
 import { ASSET_TYPES, type Asset, type AssetInput, type AssetType } from "@/lib/wealth-types";
@@ -100,5 +101,3 @@ export default function AssetsPage() {
     </div>
   );
 }
-
-export type { Paise };

@@ -18,7 +18,7 @@ import type {
   NetWorthSnapshot,
 } from "@/lib/wealth-types";
 
-type Row = Record<string, string | null>;
+type Row = Record<string, unknown>;
 
 export class SupabaseWealth implements WealthProvider {
   listInvestments(): Promise<Investment[]> {
@@ -34,10 +34,10 @@ export class SupabaseWealth implements WealthProvider {
         investmentType: r.investment_type,
         institution: r.institution,
         purchaseDate: r.purchase_date,
-        investedAmountPaise: toPaise(r.invested_amount),
+        investedAmountPaise: toPaise(String(r.invested_amount ?? "0")),
         units: r.units,
         navOrPrice: r.nav_or_price,
-        currentValuePaise: toPaise(r.current_value),
+        currentValuePaise: toPaise(String(r.current_value ?? "0")),
         valuationAsOf: r.valuation_as_of,
         maturityDate: r.maturity_date,
         interestRate: r.interest_rate,
@@ -58,7 +58,7 @@ export class SupabaseWealth implements WealthProvider {
   }
   updateInvestment(id: string, patch: Partial<InvestmentInput>): Promise<void> {
     return run(async (db) => {
-      const u: Row = {};
+      const u: Record<string, unknown> = {};
       if (patch.name !== undefined) u.name = patch.name;
       if (patch.investmentType !== undefined) u.investment_type = patch.investmentType;
       if (patch.institution !== undefined) u.institution = patch.institution;
@@ -92,7 +92,7 @@ export class SupabaseWealth implements WealthProvider {
         id: r.id,
         investmentId: r.investment_id,
         date: r.tx_date,
-        amountPaise: toPaise(r.amount),
+        amountPaise: r.amount ? toPaise(String(r.amount)) : null,
         kind: r.kind,
       })) as InvestmentFlow[];
     });
@@ -120,18 +120,22 @@ export class SupabaseWealth implements WealthProvider {
         id: r.id,
         assetType: r.asset_type,
         name: r.name,
-        valuePaise: toPaise(r.value),
+        valuePaise: toPaise(String(r.value ?? "0")),
         valuationAsOf: r.valuation_as_of,
         notes: r.notes,
       })) as Asset[];
     });
   }
   createAsset(input: AssetInput): Promise<Asset> {
-    return run(async (db) => db.insert("assets", assetToDb(input)));
+    return run(async (db) => {
+      const { data, error } = await db.from("assets").insert(assetToDb(input)).select("id").single();
+      if (error) throw new Error(error.message);
+      return { ...input, id: (data as unknown as { id: string }).id };
+    });
   }
   updateAsset(id: string, patch: Partial<AssetInput>): Promise<void> {
     return run(async (db) => {
-      const u: Row = {};
+      const u: Record<string, unknown> = {};
       if (patch.assetType !== undefined) u.asset_type = patch.assetType;
       if (patch.name !== undefined) u.name = patch.name;
       if (patch.valuePaise !== undefined) { u.value = dec(patch.valuePaise); u.valuation_as_of = patch.valuationAsOf ?? today(); }
@@ -159,20 +163,24 @@ export class SupabaseWealth implements WealthProvider {
         id: r.id,
         liabilityType: r.liability_type,
         name: r.name,
-        outstandingPaise: toPaise(r.outstanding),
+        outstandingPaise: toPaise(String(r.outstanding ?? "0")),
         interestRate: r.interest_rate,
-        emiAmountPaise: r.emi_amount ? toPaise(r.emi_amount) : null,
+        emiAmountPaise: r.emi_amount ? r.emi_amount ? toPaise(String(r.emi_amount)) : null : null,
         emiDueDay: r.emi_due_day ? Number(r.emi_due_day) : null,
         notes: r.notes,
       })) as Liability[];
     });
   }
   createLiability(input: LiabilityInput): Promise<Liability> {
-    return run(async (db) => db.insert("liabilities", liaToDb(input)));
+    return run(async (db) => {
+      const { data, error } = await db.from("liabilities").insert(liaToDb(input)).select("id").single();
+      if (error) throw new Error(error.message);
+      return { ...input, id: (data as unknown as { id: string }).id };
+    });
   }
   updateLiability(id: string, patch: Partial<LiabilityInput>): Promise<void> {
     return run(async (db) => {
-      const u: Row = {};
+      const u: Record<string, unknown> = {};
       if (patch.liabilityType !== undefined) u.liability_type = patch.liabilityType;
       if (patch.name !== undefined) u.name = patch.name;
       if (patch.outstandingPaise !== undefined) u.outstanding = dec(patch.outstandingPaise);
@@ -201,9 +209,9 @@ export class SupabaseWealth implements WealthProvider {
       return (data as unknown as Row[]).map((r) => ({
         id: r.id,
         snapshotDate: r.snapshot_date,
-        totalAssetsPaise: toPaise(r.total_assets),
-        totalLiabilitiesPaise: toPaise(r.total_liabilities),
-        netWorthPaise: toPaise(r.net_worth),
+        totalAssetsPaise: toPaise(String(r.total_assets ?? "0")),
+        totalLiabilitiesPaise: toPaise(String(r.total_liabilities ?? "0")),
+        netWorthPaise: toPaise(String(r.net_worth ?? "0")),
       })) as NetWorthSnapshot[];
     });
   }
@@ -238,11 +246,15 @@ export class SupabaseWealth implements WealthProvider {
     });
   }
   createFinancialGoal(input: FinancialGoalInput): Promise<FinancialGoal> {
-    return run(async (db) => db.insert("financial_goals", goalToDb(input)));
+    return run(async (db) => {
+      const { data, error } = await db.from("financial_goals").insert(goalToDb(input)).select("id").single();
+      if (error) throw new Error(error.message);
+      return { ...input, id: (data as unknown as { id: string }).id };
+    });
   }
   updateFinancialGoal(id: string, patch: Partial<FinancialGoalInput>): Promise<void> {
     return run(async (db) => {
-      const u: Row = {};
+      const u: Record<string, unknown> = {};
       if (patch.name !== undefined) u.name = patch.name;
       if (patch.goalType !== undefined) u.goal_type = patch.goalType;
       if (patch.targetAmountPaise !== undefined) u.target_amount = dec(patch.targetAmountPaise);
@@ -275,13 +287,17 @@ export class SupabaseWealth implements WealthProvider {
         eventType: r.event_type,
         eventDate: r.event_date,
         recurrence: r.recurrence,
-        amountPaise: r.amount ? toPaise(r.amount) : null,
+        amountPaise: r.amount ? r.amount ? toPaise(String(r.amount)) : null : null,
         notes: r.notes,
       })) as CalendarEvent[];
     });
   }
   createCalendarEvent(input: CalendarEventInput): Promise<CalendarEvent> {
-    return run(async (db) => db.insert("calendar_events", eventToDb(input)));
+    return run(async (db) => {
+      const { data, error } = await db.from("calendar_events").insert(eventToDb(input)).select("id").single();
+      if (error) throw new Error(error.message);
+      return { ...input, id: (data as unknown as { id: string }).id };
+    });
   }
   deleteCalendarEvent(id: string): Promise<void> {
     return run(async (db) => {
@@ -301,8 +317,6 @@ function dec(paise: number): string {
   const abs = Math.abs(paise);
   return `${neg ? "-" : ""}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
 }
-type Db = ReturnType<typeof createClient> & { insert: (table: string, row: Row) => Promise<never> };
-
 /** Runs a block against a fresh client; wraps errors uniformly. */
 async function run<T>(fn: (db: ReturnType<typeof createClient>) => Promise<T>): Promise<T> {
   try {
@@ -312,13 +326,8 @@ async function run<T>(fn: (db: ReturnType<typeof createClient>) => Promise<T>): 
     throw new Error(String(e));
   }
 }
-// small helper used by the create* methods above
-function makeInsert(fn: (db: ReturnType<typeof createClient>) => Promise<unknown>) {
-  return fn;
-}
-void makeInsert;
 
-function invToDb(i: InvestmentInput): Row {
+function invToDb(i: InvestmentInput): Record<string, unknown> {
   return {
     name: i.name,
     investment_type: i.investmentType,
@@ -334,17 +343,17 @@ function invToDb(i: InvestmentInput): Row {
     notes: i.notes,
   };
 }
-function assetToDb(a: AssetInput): Row {
+function assetToDb(a: AssetInput): Record<string, unknown> {
   return { asset_type: a.assetType, name: a.name, value: dec(a.valuePaise), valuation_as_of: a.valuationAsOf, notes: a.notes };
 }
-function liaToDb(l: LiabilityInput): Row {
+function liaToDb(l: LiabilityInput): Record<string, unknown> {
   return {
     liability_type: l.liabilityType, name: l.name, outstanding: dec(l.outstandingPaise),
     interest_rate: l.interestRate, emi_amount: l.emiAmountPaise !== null ? dec(l.emiAmountPaise) : null,
     emi_due_day: l.emiDueDay, notes: l.notes,
   };
 }
-function goalToDb(g: FinancialGoalInput): Row {
+function goalToDb(g: FinancialGoalInput): Record<string, unknown> {
   return {
     name: g.name, goal_type: g.goalType, target_amount: dec(g.targetAmountPaise),
     current_amount: dec(g.currentAmountPaise), target_date: g.targetDate, priority: g.priority,
@@ -354,11 +363,11 @@ function goalToDb(g: FinancialGoalInput): Row {
 function goalFromDb(r: Row): FinancialGoal {
   return {
     id: r.id, name: r.name, goalType: r.goal_type,
-    targetAmountPaise: toPaise(r.target_amount), currentAmountPaise: toPaise(r.current_amount),
+    targetAmountPaise: toPaise(String(r.target_amount ?? "0")), currentAmountPaise: toPaise(String(r.current_amount ?? "0")),
     targetDate: r.target_date, priority: r.priority, contributionFrequency: r.contribution_frequency,
     linkedAccount: r.linked_account,
   } as FinancialGoal;
 }
-function eventToDb(e: CalendarEventInput): Row {
+function eventToDb(e: CalendarEventInput): Record<string, unknown> {
   return { title: e.title, event_type: e.eventType, event_date: e.eventDate, recurrence: e.recurrence, amount: e.amountPaise !== null ? dec(e.amountPaise) : null, notes: e.notes };
 }

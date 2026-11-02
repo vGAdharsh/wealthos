@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- async data loading through the repository */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";

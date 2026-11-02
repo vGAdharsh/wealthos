@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect -- async data loading through the repository */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { formatINR, type Paise } from "@/lib/money";
+import { formatINR } from "@/lib/money";
 import { netWorthPaise } from "@/lib/domain/calculations";
 import { useRepository } from "@/lib/repository/provider";
 import type { Asset, Investment, Liability, NetWorthSnapshot } from "@/lib/wealth-types";
@@ -93,5 +94,3 @@ export default function NetWorthPage() {
     </div>
   );
 }
-
-export type { Paise };

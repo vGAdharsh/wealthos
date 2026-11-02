@@ -30,7 +30,7 @@ export function forecastFromMonthlyTotals(
   if (totals.length < 3)
     return {
       ok: false,
-      reason: `Only ${totals.length} month(s) of history — not enough to estimate a trend.`,
+      reason: `Only ${totals.length} month(s) of history — at least 3 months of records are needed to estimate a trend.`,
       minimumNeeded: "At least 3 months of records are needed for a disclosed, reproducible estimate.",
     };
   const sorted = [...totals].sort((a, b) => a.month.localeCompare(b.month)).slice(-3);

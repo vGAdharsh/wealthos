@@ -35,6 +35,9 @@ type DbTx = {
   is_recurring: boolean;
   content_hash: string;
   import_batch_id: string | null;
+  nw_classification: string | null;
+  nw_is_override: boolean;
+  nw_reasoning: string | null;
   created_at: string;
   expense_categories: { name: string } | null;
 };

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- async data loading through the repository */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -50,13 +51,9 @@ export default function InvestmentsPage() {
     if (!form) return;
     setError(null);
     try {
-      const invested = toPaise(String(form.investedAmountPaise === 0 ? "0" : form.investedAmountPaise));
-      void invested;
-    } catch { /* handled below */ }
-    try {
       if (form.investedAmountPaise <= 0) return setError("Invested amount must be positive");
       if (!form.name.trim()) return setError("Give the investment a name");
-      if (form.id === undefined) await repo.wealth.createInvestment(form);
+      await repo.wealth.createInvestment(form);
       await load();
       setForm(null);
     } catch (err) {

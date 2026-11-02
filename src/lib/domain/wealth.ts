@@ -2,7 +2,7 @@
  * Wealth-domain calculations — pure, integer-exact, documented.
  */
 
-import type { Paise } from "./money";
+import type { Paise } from "../money";
 
 /**
  * Required per-period contribution to reach a goal. Linear, growth-free

@@ -26,7 +26,7 @@ export type ChatMessage = {
 
 export async function chatCompletion(
   messages: ChatMessage[],
-  tools?: unknown[],
+  tools?: readonly unknown[],
 ): Promise<{ message: ChatMessage | null }> {
   const cfg = aiConfig();
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {

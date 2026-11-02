@@ -17,8 +17,6 @@ import type {
   NetWorthSnapshot,
 } from "@/lib/wealth-types";
 
-type Stored<T> = { [K in keyof T]: T[K] extends Paise ? string : T[K] };
-type Paise = number;
 
 const KEYS = {
   investments: "wealthos-investments-v2",

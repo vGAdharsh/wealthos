@@ -20,11 +20,11 @@ type Row = {
   source: string;
   is_recurring: boolean;
   nw_classification: string | null;
+  category_id: string | null;
   expense_categories: { name: string } | null;
 };
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function periodToRange(period: unknown): { from: string; to: string; label: string } {
   const p = typeof period === "string" ? period : "this_month";
@@ -46,7 +46,7 @@ function periodToRange(period: unknown): { from: string; to: string; label: stri
 async function fetchTx(supabase: SupabaseClient, from: string, to: string): Promise<Row[]> {
   const { data, error } = await supabase
     .from("transactions")
-    .select("type, tx_date, amount::text, description, source, is_recurring, nw_classification, expense_categories(name)")
+    .select("type, tx_date, amount::text, description, source, category_id, is_recurring, nw_classification, expense_categories(name)")
     .gte("tx_date", from)
     .lte("tx_date", to)
     .order("tx_date", { ascending: false })
@@ -137,7 +137,7 @@ export async function executeTool(
       const t = typeof args.type === "string" && types.includes(args.type) ? args.type : null;
       let q = supabase
         .from("transactions")
-        .select("type, tx_date, amount::text, description, source, is_recurring, nw_classification, expense_categories(name)")
+        .select("type, tx_date, amount::text, description, source, category_id, is_recurring, nw_classification, expense_categories(name)")
         .order("tx_date", { ascending: false })
         .limit(limit);
       if (t) q = q.eq("type", t);
@@ -161,7 +161,7 @@ export async function executeTool(
         const rows = await fetchTx(supabase, b.period_start, b.period_end);
         const spend = rows
           .filter((r) => r.type === "expense" || r.type === "refund" || r.type === "reimbursement")
-          .filter((r) => b.category_id === null || true) // category scoping needs the id; RLS already limits rows
+          .filter((r) => b.category_id === null || r.category_id === b.category_id)
           .reduce((s, r) => s + (r.type === "expense" ? toPaise(r.amount) : -toPaise(r.amount)), 0);
         out.push({
           name: b.name, scope: b.expense_categories?.name ?? "overall",
@@ -190,8 +190,6 @@ export async function executeTool(
         supabase.from("investments").select("current_value::text, invested_amount::text"),
         supabase.from("liabilities").select("outstanding::text"),
       ]);
-      const sum = (rows: { 0: string }[] | null) => ((rows?.data ?? []) as unknown as Record<string, string>[]).reduce((s, r) => s + toPaise(Object.values(r)[0]), 0);
-      void sum;
       const a = (((assets.data ?? []) as unknown as { value: string }[]).reduce((s, r) => s + toPaise(r.value), 0));
       const inv = (((investments.data ?? []) as unknown as { current_value: string; invested_amount: string }[]));
       const invCur = inv.reduce((s, r) => s + toPaise(r.current_value), 0);

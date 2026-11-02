@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   const history: ChatMessage[] = (msgs as { role: unknown; content: unknown }[])
     .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.length <= 4000)
     .slice(-10)
-    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content as string }));
 
   const convo: ChatMessage[] = [{ role: "system", content: SYSTEM_PROMPT }, ...history];
   const trace: { tool: string; ok: boolean }[] = [];

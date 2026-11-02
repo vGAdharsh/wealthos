@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect -- async data loading through the repository */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { formatINR, toPaise, type Paise } from "@/lib/money";
+import { formatINR, toPaise } from "@/lib/money";
 import { projectedGoalContribution } from "@/lib/domain/wealth";
 import { useRepository } from "@/lib/repository/provider";
 import { GOAL_TYPES, type FinancialGoal, type FinancialGoalInput, type GoalType } from "@/lib/wealth-types";
@@ -128,5 +129,3 @@ export default function GoalsPage() {
     </div>
   );
 }
-
-export type { Paise };

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- async data loading through the repository */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -13,9 +14,9 @@ function occurrences(e: CalendarEvent, horizonDays: number, today: string): stri
   const base = new Date(`${e.eventDate}T00:00:00Z`);
   const end = new Date(`${today}T00:00:00Z`);
   end.setUTCDate(end.getUTCDate() + horizonDays);
-  let cursor = e.recurrence === "none" ? base : (base > end ? base : new Date(Math.max(base.getTime(), end.getTime() - stepDays * 86400000 * 3)));
+  const cursor = e.recurrence === "none" ? base : (base > end ? base : new Date(Math.max(base.getTime(), end.getTime() - stepDays * 86400000 * 3)));
   void base;
-  let first = new Date(`${e.eventDate}T00:00:00Z`);
+  const first = new Date(`${e.eventDate}T00:00:00Z`);
   if (e.recurrence !== "none") {
     // step forward from the event date until within horizon
     while (first.getTime() < end.getTime() && dates.length < 6) {
