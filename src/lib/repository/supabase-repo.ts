@@ -76,7 +76,7 @@ function dbToTx(row: DbTx): Transaction {
     isRecurring: row.is_recurring,
     contentHash: row.content_hash,
     importBatchId: row.import_batch_id,
-    nwClassification: row.nw_classification,
+    nwClassification: (row.nw_classification as Transaction["nwClassification"]) ?? null,
     nwIsOverride: row.nw_is_override,
     nwReasoning: row.nw_reasoning,
     createdAt: row.created_at,
